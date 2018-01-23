@@ -9,7 +9,7 @@ const { TranlateService } = require('./translate');
 
 dotenv.config();
 
-const translateAPI = new TranlateService({ key: process.env.TRANLATE_TEXT_SUBSCRIPTION_KEY });
+const translateAPI = new TranlateService({ key: process.env.TRANSLATE_TEXT_SUBSCRIPTION_KEY });
 
 let botsData = {};
 const botsDataFile = path.join(__dirname, '.cache');
