@@ -30,7 +30,8 @@ const connector = new GlipConnector({
   clientSecret: process.env.GLIP_CLIENT_SECRET,
   server: process.env.GLIP_API_SERVER,
   redirectUrl: `${process.env.GLIP_BOT_SERVER}/oauth`,
-  webhookUrl: `${process.env.GLIP_BOT_SERVER}/webhook`
+  webhookUrl: `${process.env.GLIP_BOT_SERVER}/webhook`,
+  replyOnlyMentioned: true,
 });
 
 server.get('/oauth', connector.listenOAuth());
