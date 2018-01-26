@@ -55,12 +55,11 @@ bot.on('installationUpdate', (event) => {
 });
 
 const intents = new builder.IntentDialog({ recognizers: [recognizer] })
-  .matches('Translate.Translate', async (session, args) => {
+  .matches('translate.text', async (session, args) => {
     console.log('Receive message: ', session.message.text);
-    console.log('Intent: ', args.intent);
     console.log('Entities: ', args.entities);
-    const text = args.entities.find((e) => e.type === 'Translate.Text');
-    let language = args.entities.find((e) => e.type === 'Translate.TargetLanguage');
+    const text = builder.EntityRecognizer.findEntity(args.entities, 'text');
+    let language = builder.EntityRecognizer.findEntity(args.entities, 'lang-to');
     if (!text) {
       return;
     }
