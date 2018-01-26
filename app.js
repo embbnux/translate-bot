@@ -68,7 +68,8 @@ const intents = new builder.IntentDialog({ recognizers: [recognizer] })
       return;
     }
     const translation = await translateAPI.translate({ text: text.entity, language: language.entity });
-    session.send('Translate: \'%s\'', translation);
+    const reply = `${text.entity} in ${language.entity}: \n > ${translation}`;
+    session.send(reply);
   })
   .onDefault((session , args) => {
     console.log('Receive message: ', session.message.text);
