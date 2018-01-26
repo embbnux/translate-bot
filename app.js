@@ -60,11 +60,12 @@ const intents = new builder.IntentDialog({ recognizers: [recognizer] })
     console.log('Entities: ', args.entities);
     const text = builder.EntityRecognizer.findEntity(args.entities, 'text');
     let language = builder.EntityRecognizer.findEntity(args.entities, 'lang-to');
-    if (!text) {
+    const fulfillment = builder.EntityRecognizer.findEntity(args.entities, 'fulfillment');
+    if (!text || !language) {
+      if (fulfillment && fulfillment.entity.length > 0) {
+        session.send(fulfillment.entity);
+      }
       return;
-    }
-    if (!language) {
-      language = 'english';
     }
     const translation = await translateAPI.translate({ text: text.entity, language: language.entity });
     session.send('Translate: \'%s\'', translation);
