@@ -6,16 +6,14 @@ const fs = require('fs');
 const path = require('path');
 
 const { TranlateService } = require('./translate');
+const { DialogflowRecognizer } = require('./dialogflowRecognizer');
+const { MongoStorage } = require('./mongoStorage');
 
 dotenv.config();
 
-const translateAPI = new TranlateService({ key: process.env.TRANSLATE_TEXT_SUBSCRIPTION_KEY });
+const storage = new MongoStorage({ url: process.env.MONGODB_URI, db: process.env.MONGODB_DB });
 
-let botsData = {};
-const botsDataFile = path.join(__dirname, '.cache');
-if (fs.existsSync(botsDataFile)) {
-  botsData = JSON.parse(fs.readFileSync(botsDataFile, 'utf-8'));
-}
+const translateAPI = new TranlateService({ key: process.env.TRANSLATE_TEXT_SUBSCRIPTION_KEY });
 
 const server = restify.createServer();
 
@@ -23,8 +21,8 @@ server.use(restify.plugins.queryParser());
 server.use(restify.plugins.bodyParser());
 
 const connector = new GlipConnector({
-  botLookup: (botId) => {
-    const botEntry = botsData[botId];
+  botLookup: async (botId) => {
+    const botEntry = await storage.find('bots', botId)
     return botEntry;
   },
   verificationToken: process.env.GLIP_BOT_VERIFICATION_TOKEN,
@@ -43,21 +41,24 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
 });
 
 const bot = new builder.UniversalBot(connector);
-const recognizer = new builder.LuisRecognizer(process.env.LUIS_MODEL_URL);
+const recognizer = new DialogflowRecognizer(process.env.DIALOGFLOW_TOKEN);
 
 bot.on('installationUpdate', (event) => {
-  console.log(`New bot installed: ${event.sourceEvent.TokenData.owner_id}`);
+  const botId = event.sourceEvent.TokenData.owner_id;
+  console.log(`New bot installed: ${botId}`);
 
-  botsData[event.sourceEvent.TokenData.owner_id] = {
+  const botData = {
     identity: event.address.bot,
     token: event.sourceEvent.TokenData
   };
-  fs.writeFileSync(botsDataFile, JSON.stringify(botsData)); // save token
+  storage.insert('bots', botId, botData);
 });
 
 const intents = new builder.IntentDialog({ recognizers: [recognizer] })
   .matches('Translate.Translate', async (session, args) => {
-    console.log(args.entities);
+    console.log('Receive message: ', session.message.text);
+    console.log('Intent: ', args.intent);
+    console.log('Entities: ', args.entities);
     const text = args.entities.find((e) => e.type === 'Translate.Text');
     let language = args.entities.find((e) => e.type === 'Translate.TargetLanguage');
     if (!text) {
@@ -69,8 +70,15 @@ const intents = new builder.IntentDialog({ recognizers: [recognizer] })
     const translation = await translateAPI.translate({ text: text.entity, language: language.entity });
     session.send('Translate: \'%s\'', translation);
   })
-  .onDefault((session) => {
-    console.log(session.message.text);
+  .onDefault((session , args) => {
+    console.log('Receive message: ', session.message.text);
+    console.log('Intent: ', args.intent);
+    console.log('Entities: ', args.entities);
+    const fulfillment = builder.EntityRecognizer.findEntity(args.entities, 'fulfillment');
+    if (fulfillment && fulfillment.entity.length > 0) {
+      session.send(fulfillment.entity);
+      return;
+    }
     session.send('Sorry, I did not understand \'%s\'.', session.message.text);
   });
 

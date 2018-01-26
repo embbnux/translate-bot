@@ -8,11 +8,14 @@
     "start": "node app.js"
   },
   "dependencies": {
+    "apiai": "^4.0.3",
     "axios": "^0.17.1",
     "botbuilder": "^3.13.1",
-    "botbuilder-glip": "^0.0.5",
+    "botbuilder-glip": "^0.0.6",
     "dotenv": "^4.0.0",
+    "mongodb": "^3.0.1",
     "restify": "^6.3.4",
+    "uuid": "^3.2.1",
     "xml2js": "^0.4.19"
   }
 }
