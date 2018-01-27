@@ -99,9 +99,9 @@ boom@5.x.x:
   dependencies:
     hoek "4.x.x"
 
-botbuilder-glip@^0.0.6:
-  version "0.0.6"
-  resolved "https://registry.yarnpkg.com/botbuilder-glip/-/botbuilder-glip-0.0.6.tgz#f9ca330c648f682f064dcb12557ed7f2c2b883d1"
+botbuilder-glip@^0.0.7:
+  version "0.0.7"
+  resolved "https://registry.yarnpkg.com/botbuilder-glip/-/botbuilder-glip-0.0.7.tgz#9e965244c68ae039c62c17274435ee797a953cba"
   dependencies:
     botbuilder "^3.13.1"
     ringcentral "^3.1.3"
