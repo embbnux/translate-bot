@@ -59,9 +59,17 @@ const intents = new builder.IntentDialog({ recognizers: [recognizer] })
   .matches('translate.text', async (session, args) => {
     console.log('Receive message: ', session.message.text);
     console.log('Entities: ', args.entities);
-    const text = builder.EntityRecognizer.findEntity(args.entities, 'text');
+    let text = builder.EntityRecognizer.findEntity(args.entities, 'text');
     let language = builder.EntityRecognizer.findEntity(args.entities, 'lang-to');
     const fulfillment = builder.EntityRecognizer.findEntity(args.entities, 'fulfillment');
+    if (!text) {
+      text = session.conversationData.lastMessage;
+    }
+    if (!language) {
+      language = session.userData.language;
+    } else {
+      session.userData.language = language;
+    }
     if (!text || !language) {
       if (fulfillment && fulfillment.entity.length > 0) {
         session.send(fulfillment.entity);
@@ -71,17 +79,18 @@ const intents = new builder.IntentDialog({ recognizers: [recognizer] })
     const translation = await translateAPI.translate({ text: text.entity, language: language.entity });
     const reply = `Hi, "${text.entity}" in ${language.entity} is: \n> ${translation}`;
     session.send(reply);
+    session.endConversation();
   })
   .onDefault((session , args) => {
     console.log('Receive message: ', session.message.text);
     console.log('Intent: ', args.intent);
     console.log('Entities: ', args.entities);
+    session.conversationData.lastMessage = session.message.text;
     const fulfillment = builder.EntityRecognizer.findEntity(args.entities, 'fulfillment');
     if (fulfillment && fulfillment.entity.length > 0) {
       session.send(fulfillment.entity);
       return;
     }
-    session.send('Sorry, I did not understand \'%s\'.', session.message.text);
   });
 
 bot.dialog('/', intents);
